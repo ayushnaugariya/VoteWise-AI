@@ -30,5 +30,10 @@ jobs:
       working-directory: ./server
       run: npm test
 
+    - name: Run Client Tests
+      working-directory: ./client
+      run: npm test
+
     - name: Build Client
+      working-directory: ./client
       run: npm run build

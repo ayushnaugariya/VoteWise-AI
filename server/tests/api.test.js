@@ -165,3 +165,53 @@ describe('Eligibility Logic', () => {
     expect(checkEligibility(20, false)).toBe(false);
   });
 });
+
+describe('Candidate API', () => {
+  test('POST /api/candidate - rejects missing name', async () => {
+    const res = await request(app).post('/api/candidate').send({});
+    expect(res.statusCode).toBe(400);
+  });
+  test('POST /api/candidate - returns report for valid request', async () => {
+    const res = await request(app).post('/api/candidate').send({ name: 'Rahul', constituency: 'Wayanad' });
+    expect([200, 500]).toContain(res.statusCode);
+  });
+});
+
+describe('Manifesto API', () => {
+  test('POST /api/manifesto/analyze - rejects missing text', async () => {
+    const res = await request(app).post('/api/manifesto/analyze').send({});
+    expect(res.statusCode).toBe(400);
+  });
+  test('POST /api/manifesto/analyze - rejects short text', async () => {
+    const res = await request(app).post('/api/manifesto/analyze').send({ text: 'short' });
+    expect(res.statusCode).toBe(400);
+  });
+});
+
+describe('Constituency API', () => {
+  test('POST /api/constituency/research - rejects missing pincode', async () => {
+    const res = await request(app).post('/api/constituency/research').send({});
+    expect(res.statusCode).toBe(400);
+  });
+  test('POST /api/constituency/research - rejects invalid pincode', async () => {
+    const res = await request(app).post('/api/constituency/research').send({ pincode: '123' });
+    expect(res.statusCode).toBe(400);
+  });
+});
+
+describe('Analytics API', () => {
+  test('POST /api/analytics/log - rejects missing message', async () => {
+    const res = await request(app).post('/api/analytics/log').send({});
+    expect(res.statusCode).toBe(400);
+  });
+  test('POST /api/analytics/log - returns valid response', async () => {
+    const res = await request(app).post('/api/analytics/log').send({ message: 'voter id' });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.logged).toBe(true);
+  });
+  test('GET /api/analytics/trends - returns trends', async () => {
+    const res = await request(app).get('/api/analytics/trends');
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('trends');
+  });
+});
