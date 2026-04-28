@@ -9,7 +9,7 @@
     "dev-client": "cd client && npm run dev",
     "dev-server": "cd server && npm run dev",
     "dev": "npm run install-all && echo '--- STARTING CLIENT AND SERVER ---' && start npm run dev-client && npm run dev-server",
-    "build": "cd client && npm install && npm run build",
+    "build": "cd client && npm install --legacy-peer-deps && npm run build",
     "start": "cd server && npm start"
   }
 }
