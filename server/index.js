@@ -9,6 +9,7 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 
 const chatRoutes = require('./routes/chat');
 const fakeNewsRoutes = require('./routes/fakenews');
@@ -23,8 +24,17 @@ const { apiLimiter } = require('./middleware/rateLimit');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ── Security ──────────────────────────────────────────
+// ── Security & Efficiency ──────────────────────────────
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(compression());
+
+// Cache-Control headers for GET requests to optimize efficiency
+app.use((req, res, next) => {
+  if (req.method === 'GET') {
+    res.set('Cache-Control', 'public, max-age=300'); // 5 minutes cache
+  }
+  next();
+});
 
 // ── CORS ──────────────────────────────────────────────
 app.use(cors({
