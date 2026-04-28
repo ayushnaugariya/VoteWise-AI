@@ -25,9 +25,15 @@ function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-blue-700 focus:shadow-lg"
+        >
+          Skip to content
+        </a>
         <Navbar />
-        <main className="flex-1" role="main">
-          <Suspense fallback={<LoadingSkeleton />}>
+        <main id="main-content" className="flex-1" role="main" tabIndex={-1}>
+          <Suspense fallback={<LoadingSkeleton ariaLabel="Loading VoteWise AI content" />}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/chat" element={<Chat />} />

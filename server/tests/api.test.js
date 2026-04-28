@@ -2,6 +2,63 @@
  * VoteWise AI - Backend Tests
  * Tests for chat, fake news, and quiz routes
  */
+const mockGeminiText = (prompt) => {
+  if (prompt.includes('Analyze this news')) {
+    return JSON.stringify({
+      verdict: 'TRUE',
+      confidence: 92,
+      biasScore: 1,
+      emotionalLanguage: 1,
+      emotionalWords: [],
+      explanation: 'The statement is written as a neutral election update.',
+      neutralRewrite: 'Election officials announced the election schedule.',
+      redFlags: [],
+      sources: ['eci.gov.in'],
+    });
+  }
+
+  if (prompt.includes('Generate a report card')) {
+    return JSON.stringify({
+      name: 'Rahul',
+      constituency: 'Wayanad',
+      party: 'Sample Party',
+      position: 'MP - Lok Sabha',
+      education: 'Graduate',
+      age: 'Unknown',
+      experience: 'Public service record available',
+      criminalCases: 0,
+      criminalDetails: 'No criminal cases declared in this mock response.',
+      assetsValue: 'Not available',
+      previousTerms: 'Unknown',
+      keyAchievements: ['Public meetings', 'Parliamentary participation'],
+      redFlags: [],
+      positives: ['Accessible public record'],
+      overallRating: 7,
+      ratingReason: 'Mocked deterministic candidate report for tests.',
+      verifyLinks: ['https://affidavit.eci.gov.in', 'https://eci.gov.in'],
+      disclaimer: 'Verify official records before voting.',
+      dataConfidence: 'LOW',
+    });
+  }
+
+  return 'Mocked election education answer: check voter registration at voters.eci.gov.in and carry an accepted ID.';
+};
+
+jest.mock('@google/generative-ai', () => ({
+  GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
+    getGenerativeModel: jest.fn(() => ({
+      startChat: jest.fn(() => ({
+        sendMessage: jest.fn(async () => ({
+          response: { text: () => mockGeminiText('chat') },
+        })),
+      })),
+      generateContent: jest.fn(async (prompt) => ({
+        response: { text: () => mockGeminiText(String(prompt)) },
+      })),
+    })),
+  })),
+}));
+
 const request = require('supertest');
 const app = require('../index');
 
@@ -12,6 +69,22 @@ describe('Health Check', () => {
     expect(res.body).toHaveProperty('status', 'healthy');
     expect(res.body).toHaveProperty('service', 'VoteWise AI API');
     expect(res.body).toHaveProperty('googleServices');
+  });
+
+  test('GET /health includes production safety headers and cache policy', async () => {
+    const res = await request(app).get('/health');
+    expect(res.headers).toHaveProperty('cache-control');
+    expect(res.headers['cache-control']).toContain('max-age=300');
+    expect(res.headers).toHaveProperty('x-content-type-options', 'nosniff');
+  });
+
+  test('rejects disallowed CORS origins', async () => {
+    const res = await request(app)
+      .get('/health')
+      .set('Origin', 'https://malicious.example');
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body.error).toBe('CORS policy violation');
   });
 });
 
@@ -141,6 +214,50 @@ describe('Quiz API', () => {
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty('leaderboard');
     expect(Array.isArray(res.body.leaderboard)).toBe(true);
+  });
+
+  test('POST /api/quiz/submit - rejects missing auth token', async () => {
+    const res = await request(app).post('/api/quiz/submit').send({ answers: [] });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body.error).toContain('Unauthorized');
+  });
+
+  test('POST /api/quiz/submit - validates answer payload shape', async () => {
+    const res = await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', 'Bearer test-token')
+      .send({ answers: 'not-an-array' });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBe('answers must be an array');
+  });
+
+  test('POST /api/quiz/submit - scores answers and returns explanations', async () => {
+    const answers = [
+      { questionId: 1, selectedOption: 1 },
+      { questionId: 2, selectedOption: 1 },
+      { questionId: 3, selectedOption: 2 },
+      { questionId: 4, selectedOption: 1 },
+      { questionId: 5, selectedOption: 1 },
+      { questionId: 6, selectedOption: 2 },
+      { questionId: 7, selectedOption: 1 },
+      { questionId: 8, selectedOption: 1 },
+      { questionId: 9, selectedOption: 0 },
+      { questionId: 10, selectedOption: 1 },
+    ];
+
+    const res = await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', 'Bearer test-token')
+      .send({ answers });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.score).toBe(10);
+    expect(res.body.percentage).toBe(100);
+    expect(res.body.badge).toBe('democracy_hero');
+    expect(res.body.results).toHaveLength(10);
+    expect(res.body.results[0]).toHaveProperty('explanation');
   });
 });
 

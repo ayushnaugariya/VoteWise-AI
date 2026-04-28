@@ -1,10 +1,10 @@
 /** Loading skeleton with shimmer animation */
-export default function LoadingSkeleton({ lines = 4 }) {
+export default function LoadingSkeleton({ lines = 4, ariaLabel = 'Loading content' }) {
   return (
     <div
       className="max-w-4xl mx-auto px-6 py-12 animate-fade-in"
       role="status"
-      aria-label="Loading content"
+      aria-label={ariaLabel}
     >
       <div className="shimmer h-10 w-2/3 rounded-xl mb-4" />
       <div className="shimmer h-4 w-full rounded-lg mb-2" />

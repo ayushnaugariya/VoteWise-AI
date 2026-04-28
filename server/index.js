@@ -106,17 +106,17 @@ if (process.env.NODE_ENV === 'production') {
 
 // ── Global Error Handler ──────────────────────────────
 app.use((err, req, res, _next) => {
-  console.error('[VoteWise AI Error]:', err.message);
   if (err.message === 'Not allowed by CORS') {
     return res.status(403).json({ error: 'CORS policy violation' });
   }
+  console.error('[VoteWise AI Error]:', err.message);
   res.status(err.status || 500).json({
     error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
   });
 });
 
 // ── Start ─────────────────────────────────────────────
-if (!process.env.VERCEL) {
+if (!process.env.VERCEL && require.main === module) {
   app.listen(PORT, () => {
     console.log(`\n🗳️  VoteWise AI Server running on http://localhost:${PORT}`);
     console.log(`🔍 Health: http://localhost:${PORT}/health\n`);

@@ -22,7 +22,7 @@ const REGISTRATION_DOCS = [
   'Smart Card issued by RGI', 'Pension Document with Photo',
 ];
 
-const checkEligibility = ({ age, citizenship, hasId }) => {
+export const checkEligibility = ({ age, citizenship, hasId }) => {
   const reasons = [];
   let eligible = true;
 
@@ -198,7 +198,7 @@ export default function Eligibility() {
                 }
                 <div>
                   <h2 className={`text-2xl font-bold ${result.eligible ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
-                    {result.eligible ? '✅ You Are Eligible to Vote!' : '❌ Not Currently Eligible'}
+                    {result.eligible ? 'You Are Eligible to Vote!' : 'Not Currently Eligible'}
                   </h2>
                   <p className="text-sm text-gray-500">In {result.state}, India</p>
                 </div>
@@ -242,12 +242,12 @@ export default function Eligibility() {
                   ))}
                 </ol>
               ) : (
-                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                  <p>• Wait until you turn 18 to register as a voter</p>
-                  <p>• Only Indian citizens can vote in Lok Sabha/Vidhan Sabha elections</p>
-                  <p>• NRIs holding OCI/PIO cards are not eligible to vote</p>
-                  <p>• Call Voter Helpline: <strong>1950</strong> for guidance</p>
-                </div>
+                <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                  <li>Wait until you turn 18 to register as a voter</li>
+                  <li>Only Indian citizens can vote in Lok Sabha/Vidhan Sabha elections</li>
+                  <li>NRIs holding OCI/PIO cards are not eligible to vote</li>
+                  <li>Call Voter Helpline: <strong>1950</strong> for guidance</li>
+                </ul>
               )}
             </div>
 

@@ -18,7 +18,11 @@ try {
     admin = firebaseAdmin;
   }
 } catch (e) {
-  console.warn('[Auth] Firebase Admin not initialized:', e.message);
+  if (e.code === 'MODULE_NOT_FOUND') {
+    admin = null;
+  } else {
+    console.warn('[Auth] Firebase Admin not initialized:', e.message);
+  }
 }
 
 /** Verify Firebase ID token - rejects unauthorized requests */
